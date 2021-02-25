@@ -15,10 +15,15 @@ struct ContentView: View {
     @State private var scoreTitle = ""
     @State private var scoreMessage = ""
     
-    @State private var score = 0
+    @State private var rotationValue = [0.0, 0.0, 0.0]
+    @State private var opacityValue = [1.0, 1.0, 1.0]
     
+    @State private var score = 0
+
     struct FlagImage: View {
         let countryName: String
+        var rotationValue = 0.0
+        var opacityValue = 1.0
         
         var body: some View {
             Image("\(countryName)")
@@ -26,6 +31,8 @@ struct ContentView: View {
                 .clipShape(Capsule())
                 .overlay(Capsule().stroke(Color.black, lineWidth: 1.0))
                 .shadow(radius: 5)
+                .rotation3DEffect(Angle.degrees(rotationValue), axis: (x: 0.0, y: 1.0, z: 0.0))
+                .opacity(opacityValue)
         }
     }
     
@@ -41,17 +48,17 @@ struct ContentView: View {
                         .font(.largeTitle)
                 }
                 
-                ForEach(0..<3) { number in
+                ForEach(0..<3, id: \.self) { number in
                     Button(action: {
                         flagTapped(number)
                     }) {
-                        FlagImage(countryName: countries[number])
+                        FlagImage(countryName: countries[number], rotationValue: rotationValue[number], opacityValue: opacityValue[number])
                     }
                 }
                 
                 Text("Your score: \(score)")
                     .foregroundColor(.white)
-                    .shadow(radius: /*@START_MENU_TOKEN@*/10/*@END_MENU_TOKEN@*/)
+                    .shadow(radius: 10)
                 
                 Spacer()
             }
@@ -65,6 +72,14 @@ struct ContentView: View {
             score += 1
             scoreTitle = "Correct"
             scoreMessage = "Your score is \(score)"
+            withAnimation {
+                rotationValue[tappedNumber] += 360.0
+                for num in 0..<opacityValue.count {
+                    if num != tappedNumber {
+                        opacityValue[num] = 0.25
+                    }
+                }
+            }
         } else {
             scoreTitle = "Wrong"
             scoreMessage = "That's the flag of \(countries[tappedNumber])"
@@ -76,6 +91,8 @@ struct ContentView: View {
     func askQuestion() {
         countries.shuffle()
         correctAnswer = Int.random(in: 0...2)
+        opacityValue = Array(repeating: 1.0, count: 3)
+        rotationValue = Array(repeating: 0.0, count: 3)
     }
 }
 
